@@ -1,0 +1,155 @@
+---
+- hosts: bone
+
+  vars: 
+    home: '/home/debian'
+    home_cowrie: "/home/cowrie"
+
+  remote_user: debian
+
+  tasks:
+
+    - name: Let debian sudo to cowrie without a password
+      become: yes
+      action: lineinfile destfile=/etc/sudoers state=present line='debian  ALL=(cowrie) NOPASSWD:ALL'
+
+    - name: Add cowrie user
+      become: yes
+      action: user name=cowrie
+
+    - name: update apt cache
+      become: yes
+      apt: update_cache=yes cache_valid_time=3600
+
+    - name: install build-essential
+      become: yes
+      apt: pkg=build-essential
+
+    - name: install python-dev
+      become: yes
+      apt: pkg=python-dev
+    
+    - name: install libffi-dev
+      become: yes
+      apt: pkg=libffi-dev
+
+    - name: install libssl-dev
+      become: yes
+      apt: pkg=libssl-dev
+    
+    - name: install libgmp3-dev
+      become: yes
+      apt: pkg=libgmp3-dev
+    
+    - name: install libmpfr-dev
+      become: yes
+      apt: pkg=libmpfr-dev
+    
+    - name: install libmpc-dev
+      become: yes
+      apt: pkg=libmpc-dev
+
+    - name: install python-virtualenv
+      become: yes
+      apt: pkg=python-virtualenv
+
+    - name: install git
+      become: yes
+      apt: pkg=git
+
+    - name: create virtualenv env
+      become: yes
+      become_user: cowrie
+      command: virtualenv {{ home_cowrie }}/env
+    
+    - name: install gmpy2 in virtualenv env
+      pip: name=gmpy2 virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+    
+    - name: install packaging in virtualenv env
+      pip: name=packaging virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+
+    - name: install appdirs in virtualenv env
+      pip: name=appdirs virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+
+    - name: install configparser in virtualenv env
+      pip: name=configparser virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+    
+    - name: install pyparsing in virtualenv env
+      pip: name=pyparsing virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+
+    - name: install pyasn1_modules in virtualenv env
+      pip: name=pyasn1_modules virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+    
+    - name: install attrs in virtualenv env
+      pip: name=attrs virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+    
+    - name: install service_identity in virtualenv env
+      pip: name=service_identity virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+    
+    - name: install python-dateutil in virtualenv env
+      pip: name=python-dateutil virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+    
+    - name: install tftpy in virtualenv env
+      pip: name=tftpy virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+    
+    - name: install pyopenssl in virtualenv env
+      pip: name=pyopenssl virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+    
+    - name: install cryptography in virtualenv env
+      pip: name=cryptography virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+
+    - name: install pycrypto in virtualenv env
+      pip: name=pycrypto virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+    
+    - name: install twisted in virtualenv env
+      pip: name=twisted virtualenv={{ home_cowrie }}/env virtualenv_command=virtualenv
+      become: yes
+      become_user: cowrie
+
+    - name: Download cowrie
+      git: repo=git://github.com/micheloosterhof/cowrie.git dest={{ home_cowrie }}/cowrie update=no accept_hostkey=yes
+      become: yes
+      become_user: cowrie
+      notify:
+      - configure cowrie
+    
+    - name: install ssh key
+      authorized_key: user=debian
+         key="{{ lookup('file', '/home/jcoleman/.ssh/id_rsa.pub') }}" 
+         state=present
+    
+  handlers:
+    - name: configure cowrie
+      become: yes
+      become_user: cowrie
+      shell: "{{ item }}"
+      args: 
+        chdir: "{{ home_cowrie }}/cowrie"
+      with_items:
+        - cp cowrie.cfg.dist cowrie.cfg
