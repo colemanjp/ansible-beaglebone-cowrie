@@ -15,7 +15,7 @@
 
     - name: Add cowrie user
       become: yes
-      action: user name=cowrie
+      action: user name=cowrie shell=/bin/bash
 
     - name: update apt cache
       become: yes
